@@ -18,15 +18,21 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os2.h"
+#include "gpdma.h"
+#include "i2c.h"
 #include "icache.h"
-#include "stm32u575xx.h"
-#include "stm32u5xx_hal_gpio.h"
+#include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdint.h>
 #include <stdio.h>
+#include "driver_oled.h"
+#include "dht11.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,12 +53,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t gSendCount = 0;  //�������ݼ���
+uint8_t gSendCount = 0;  
+uint8_t key_pressed_flag  = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void SystemPower_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -60,27 +68,7 @@ static void SystemPower_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#include <stdio.h>
 
-#ifdef __GNUC__
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif
-
-PUTCHAR_PROTOTYPE
-{
-  // 这里的 &huart1 要根据你 .ioc 里的设置来，通常是 huart1 或 huart2
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-  return ch;
-}
-
-// 关键：GCC 需要这个函数来重定向 printf
-int _write(int file, char *ptr, int len)
-{
-  HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
-  return len;
-}
 
 
 /* USER CODE END 0 */
@@ -117,25 +105,59 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_GPDMA1_Init();
   MX_ICACHE_Init();
   MX_USART1_UART_Init();
+  MX_TIM2_Init();
+  MX_SPI1_Init();
+  MX_I2C1_Init();
+  OLED_Init();
   /* USER CODE BEGIN 2 */
+  OLED_Clear(); // 确保 OLED 在开始时是清空的
+  
+  //   // --- 在这里添加测试代码 ---
+  // uint8_t tx_buffer[4] = {0}; // 发送缓冲区
+  // uint8_t rx_buffer[4] = {0}; // 接收缓冲区
+  // // 使用 0x9F 命令读取 JEDEC ID
+  // tx_buffer[0] = 0x9F; // Read JEDEC ID command
+  // // 片选信号拉低 (CS Low)
+  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  // // 通过 SPI 发送命令并接收 3 个字节的 ID
+  // HAL_SPI_TransmitReceive(&hspi1, tx_buffer, rx_buffer, 4, HAL_MAX_DELAY);
+  // // 片选信号拉高 (CS High)，结束通信
+  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  // // 此时，rx_buffer[1], rx_buffer[2], rx_buffer[3] 应该包含了 ID
+  // // rx_buffer[0] 是发送命令时接收到的无用数据，可以忽略。
+  // // 打印或检查结果
+  // // 如果您有串口调试功能，可以打印出来
+  //  printf("JEDEC ID: %02X %02X %02X\r\n", rx_buffer[1], rx_buffer[2], rx_buffer[3]);
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+  /* Call init function for freertos objects (in app_freertos.c) */
+  MX_FREERTOS_Init();
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+
   while (1)
   {
-		
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
-
-      
-		HAL_Delay(2000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+     HAL_Delay(1000);
+
   }
+
   /* USER CODE END 3 */
 }
 
@@ -211,6 +233,28 @@ static void SystemPower_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1)
+  {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

@@ -21,6 +21,7 @@
 #include "usart.h"
 
 /* USER CODE BEGIN 0 */
+#include <stdio.h>
 
 /* USER CODE END 0 */
 
@@ -137,4 +138,24 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
 /* USER CODE BEGIN 1 */
 
+
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
+
+PUTCHAR_PROTOTYPE
+{
+  // 这里的 &huart1 要根据你 .ioc 里的设置来，通常是 huart1 或 huart2
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
+
+// 关键：GCC 需要这个函数来重定向 printf
+int _write(int file, char *ptr, int len)
+{
+  HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+  return len;
+}
 /* USER CODE END 1 */

@@ -32,6 +32,10 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "stm32u5xx.h"
+#include "cmsis_os2.h"     // 如果用 CMSIS-RTOS V2
+#include "FreeRTOS.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -59,6 +63,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
+#define LIGHT_SENSOR_GPIO_PORT GPIOA
+#define LIGHT_SENSOR_PIN GPIO_PIN_3
 
 /* USER CODE END Private defines */
 
