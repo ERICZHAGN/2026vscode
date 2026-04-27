@@ -1,44 +1,35 @@
-# ====================== 嵌入式项目专用 ======================
-# 1. 编译产物（必加！）
+# 编译产物
+build/
+Debug/
+Release/
 *.o
-*.obj
+*.d
 *.elf
 *.bin
 *.hex
-*.axf
 *.map
-*.out
-*.lib
-*.a
-*.su
-*.sym
-*.bak
+
+# CubeMX 自动生成（可选保留 .ioc）
 *.log
+*.tmp
 
-# 2. 构建目录（必加！）
-build/
-build-*/
-cmake-build-*/
-Debug/
-Release/
-bin/
-obj/
-
-# 3. STM32CubeMX 相关
-*.ioc
-*.mxproject
-.cproject
-.project
-/.metadata/
-
-# 4. VS Code 配置（可选，多人协作建议加）
+# VSCode
 .vscode/
-.vs/
-*.code-workspace
 
-# 5. 其他杂项
-*.swp
-*.swo
-*~
+# 系统文件
 .DS_Store
 Thumbs.db
+
+# Keil / IAR
+*.uvprojx
+*.uvoptx
+*.ewp
+*.eww
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# 其他
+*.bak
+*.swp
